@@ -1,0 +1,5 @@
+✅ Python 3.13 (или актуальную стабильную версию)
+✅ VS Code
+✅ Git
+✅ GitHub Desktop (по желанию, сначала можно без него)
+✅ ChatGPT Desktop
