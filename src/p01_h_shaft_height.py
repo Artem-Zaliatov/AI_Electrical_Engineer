@@ -1,384 +1,543 @@
 """
-Selection of standard shaft height h for an induction motor.
+Digital Electrical Engineer (DEE)
 
-DEE engineering dataset.
+P01 - SHAFT HEIGHT SELECTION
 
-Selection principle:
+Selection of the standard shaft height h
+for an asynchronous motor.
 
-    P2 + 2p + protection degree -> standard shaft height h
+Reference:
 
-Implemented protection degrees:
+    Kopylov
+    Figure 9.18
 
-    IP44
-    IP23
+Protection degrees:
 
-Power range:
+    IP44 - Figure 9.18a
+    IP23 - Figure 9.18b
 
-    0.55 ... 315 kW
+INPUT:
 
-IP44:
-Discrete AIR frame/power engineering dataset.
+    power_kw   - rated output power P2, kW
+    poles      - number of poles 2p
+    protection - IP44 or IP23
 
-IP23:
-Engineering digitization of Kopylov Fig. 9.18
-with selection of a standard shaft height.
+OUTPUT:
 
-NOTE:
-The IP23 diagram contains permissible design regions.
-The continuous graphical dependence is converted here into
-a discrete engineering selection table for standard rated powers.
+    standard shaft height h, mm
+
+
+IMPORTANT
+---------
+
+The tables below are digitized engineering data
+obtained from Kopylov Figure 9.18.
+
+The diagram gives recommended shaft-height zones
+depending on:
+
+    P2
+    2p
+    protection degree
+
+The continuous diagram is converted to standard
+shaft heights.
+
+For IP23, combinations outside the digitized
+Figure 9.18b operating area are not artificially
+clamped to h = 160 mm.
+
+Such combinations are reported as unavailable.
 """
 
 
 # ================================================================
-# STANDARD RATED POWER SERIES
+# STANDARD MOTOR POWERS
 # ================================================================
 
 STANDARD_POWERS_KW = (
     0.55,
     0.75,
-    1.1,
-    1.5,
-    2.2,
-    3.0,
-    4.0,
-    5.5,
-    7.5,
-    11.0,
-    15.0,
-    18.5,
-    22.0,
-    30.0,
-    37.0,
-    45.0,
-    55.0,
-    75.0,
-    90.0,
-    110.0,
-    132.0,
-    160.0,
-    200.0,
-    250.0,
-    315.0,
+    1.10,
+    1.50,
+    2.20,
+    3.00,
+    4.00,
+    5.50,
+    7.50,
+    11.00,
+    15.00,
+    18.50,
+    22.00,
+    30.00,
+    37.00,
+    45.00,
+    55.00,
+    75.00,
+    90.00,
+    110.00,
+    132.00,
+    160.00,
+    200.00,
+    250.00,
+    315.00,
 )
 
 
 # ================================================================
-# STANDARD SHAFT HEIGHTS
+# SUPPORTED NUMBERS OF POLES
 # ================================================================
 
-STANDARD_SHAFT_HEIGHTS_MM = (
-    56,
-    63,
-    71,
-    80,
-    90,
-    100,
-    112,
-    132,
-    160,
-    180,
-    200,
-    225,
-    250,
-    280,
-    315,
-    355,
+SUPPORTED_POLES = (
+    2,
+    4,
+    6,
+    8,
 )
 
 
 # ================================================================
-# IP44 DATA
+# IP44
+#
+# KOPYLOV FIGURE 9.18a
+#
+# Existing digitized data retained.
 # ================================================================
 
-H_IP44 = {
-
-    # ------------------------------------------------------------
-    # 2 poles
-    # ------------------------------------------------------------
+IP44_SHAFT_HEIGHT_DATA = {
 
     2: {
         0.55: 63,
         0.75: 71,
-        1.1: 71,
-        1.5: 80,
-        2.2: 80,
-        3.0: 90,
-        4.0: 100,
-        5.5: 100,
-        7.5: 112,
-        11.0: 132,
-        15.0: 160,
-        18.5: 160,
-        22.0: 180,
-        30.0: 180,
-        37.0: 200,
-        45.0: 200,
-        55.0: 225,
-        75.0: 250,
-        90.0: 250,
-        110.0: 280,
-        132.0: 280,
-        160.0: 315,
-        200.0: 315,
-        250.0: 355,
-        315.0: 355,
+        1.10: 71,
+        1.50: 80,
+        2.20: 80,
+        3.00: 90,
+        4.00: 100,
+        5.50: 100,
+        7.50: 112,
+        11.00: 132,
+        15.00: 160,
+        18.50: 160,
+        22.00: 180,
+        30.00: 180,
+        37.00: 200,
+        45.00: 200,
+        55.00: 225,
+        75.00: 250,
+        90.00: 250,
+        110.00: 280,
+        132.00: 280,
+        160.00: 315,
+        200.00: 315,
+        250.00: 355,
+        315.00: 355,
     },
-
-    # ------------------------------------------------------------
-    # 4 poles
-    # ------------------------------------------------------------
 
     4: {
         0.55: 71,
         0.75: 71,
-        1.1: 80,
-        1.5: 80,
-        2.2: 90,
-        3.0: 100,
-        4.0: 100,
-        5.5: 112,
-        7.5: 132,
-        11.0: 132,
-        15.0: 160,
-        18.5: 160,
-        22.0: 180,
-        30.0: 180,
-        37.0: 200,
-        45.0: 200,
-        55.0: 225,
-        75.0: 250,
-        90.0: 250,
-        110.0: 280,
-        132.0: 280,
-        160.0: 315,
-        200.0: 315,
-        250.0: 355,
-        315.0: 355,
+        1.10: 80,
+        1.50: 80,
+        2.20: 90,
+        3.00: 100,
+        4.00: 100,
+        5.50: 112,
+        7.50: 132,
+        11.00: 132,
+        15.00: 160,
+        18.50: 160,
+        22.00: 180,
+        30.00: 180,
+        37.00: 200,
+        45.00: 200,
+        55.00: 225,
+        75.00: 250,
+        90.00: 250,
+        110.00: 280,
+        132.00: 280,
+        160.00: 315,
+        200.00: 315,
+        250.00: 355,
+        315.00: 355,
     },
-
-    # ------------------------------------------------------------
-    # 6 poles
-    # ------------------------------------------------------------
 
     6: {
         0.55: 71,
         0.75: 80,
-        1.1: 80,
-        1.5: 90,
-        2.2: 100,
-        3.0: 112,
-        4.0: 112,
-        5.5: 132,
-        7.5: 132,
-        11.0: 160,
-        15.0: 160,
-        18.5: 180,
-        22.0: 200,
-        30.0: 200,
-        37.0: 225,
-        45.0: 250,
-        55.0: 250,
-        75.0: 280,
-        90.0: 280,
-        110.0: 315,
-        132.0: 315,
-        160.0: 355,
-        200.0: 355,
-        250.0: 355,
-        315.0: None,
+        1.10: 80,
+        1.50: 90,
+        2.20: 100,
+        3.00: 112,
+        4.00: 112,
+        5.50: 132,
+        7.50: 132,
+        11.00: 160,
+        15.00: 160,
+        18.50: 180,
+        22.00: 200,
+        30.00: 200,
+        37.00: 225,
+        45.00: 250,
+        55.00: 250,
+        75.00: 280,
+        90.00: 280,
+        110.00: 315,
+        132.00: 315,
+        160.00: 355,
+        200.00: 355,
+        250.00: 355,
+        315.00: None,
     },
-
-    # ------------------------------------------------------------
-    # 8 poles
-    # ------------------------------------------------------------
 
     8: {
         0.55: 80,
         0.75: 90,
-        1.1: 90,
-        1.5: 100,
-        2.2: 112,
-        3.0: 112,
-        4.0: 132,
-        5.5: 132,
-        7.5: 160,
-        11.0: 160,
-        15.0: 180,
-        18.5: 200,
-        22.0: 200,
-        30.0: 225,
-        37.0: 250,
-        45.0: 250,
-        55.0: 280,
-        75.0: 280,
-        90.0: 315,
-        110.0: 315,
-        132.0: 355,
-        160.0: 355,
-        200.0: 355,
-        250.0: None,
-        315.0: None,
+        1.10: 90,
+        1.50: 100,
+        2.20: 112,
+        3.00: 112,
+        4.00: 132,
+        5.50: 132,
+        7.50: 160,
+        11.00: 160,
+        15.00: 180,
+        18.50: 200,
+        22.00: 200,
+        30.00: 225,
+        37.00: 250,
+        45.00: 250,
+        55.00: 280,
+        75.00: 280,
+        90.00: 315,
+        110.00: 315,
+        132.00: 355,
+        160.00: 355,
+        200.00: 355,
+        250.00: None,
+        315.00: None,
     },
 }
 
 
 # ================================================================
-# IP23 DATA
+# IP23
 #
-# Engineering digitization of Kopylov Fig. 9.18.
+# KOPYLOV FIGURE 9.18b
 #
-# The graphical regions are converted to accepted standard
-# shaft heights.
+# RE-DIGITIZED DATA
+#
+# The previous IP23 table was rejected because low-power
+# combinations were artificially clamped to h = 160 mm and
+# medium-power shaft heights were overestimated.
+#
+# The new data follow the position of the corresponding
+# 2p zones in Figure 9.18b.
+#
+# None:
+#
+#     combination is outside the accepted digitized area
+#     of Figure 9.18b.
 # ================================================================
 
-H_IP23 = {
+IP23_SHAFT_HEIGHT_DATA = {
 
     # ------------------------------------------------------------
-    # 2 poles
+    # 2p = 2
     # ------------------------------------------------------------
 
     2: {
-        0.55: 160,
-        0.75: 160,
-        1.1: 160,
-        1.5: 160,
-        2.2: 160,
-        3.0: 160,
-        4.0: 160,
-        5.5: 160,
-        7.5: 180,
-        11.0: 180,
-        15.0: 200,
-        18.5: 200,
-        22.0: 200,
-        30.0: 225,
-        37.0: 225,
-        45.0: 250,
-        55.0: 250,
-        75.0: 280,
-        90.0: 280,
-        110.0: 315,
-        132.0: 315,
-        160.0: 315,
-        200.0: 355,
-        250.0: 355,
-        315.0: 355,
+        0.55: None,
+        0.75: None,
+        1.10: None,
+        1.50: None,
+        2.20: None,
+        3.00: None,
+        4.00: None,
+        5.50: None,
+        7.50: None,
+        11.00: None,
+
+        15.00: 160,
+        18.50: 160,
+        22.00: 180,
+        30.00: 180,
+        37.00: 200,
+        45.00: 200,
+        55.00: 225,
+        75.00: 250,
+        90.00: 250,
+        110.00: 280,
+        132.00: 280,
+        160.00: 315,
+        200.00: 315,
+        250.00: 355,
+        315.00: 355,
     },
 
+
     # ------------------------------------------------------------
-    # 4 poles
+    # 2p = 4
     # ------------------------------------------------------------
 
     4: {
-        0.55: 160,
-        0.75: 160,
-        1.1: 160,
-        1.5: 160,
-        2.2: 160,
-        3.0: 160,
-        4.0: 160,
-        5.5: 180,
-        7.5: 180,
-        11.0: 200,
-        15.0: 200,
-        18.5: 225,
-        22.0: 225,
-        30.0: 250,
-        37.0: 250,
-        45.0: 250,
-        55.0: 280,
-        75.0: 280,
-        90.0: 315,
-        110.0: 315,
-        132.0: 315,
-        160.0: 355,
-        200.0: 355,
-        250.0: 355,
-        315.0: 355,
+        0.55: None,
+        0.75: None,
+        1.10: None,
+        1.50: None,
+        2.20: None,
+        3.00: None,
+        4.00: None,
+        5.50: None,
+
+        7.50: 160,
+        11.00: 160,
+        15.00: 180,
+        18.50: 180,
+        22.00: 200,
+        30.00: 200,
+        37.00: 225,
+        45.00: 225,
+        55.00: 250,
+        75.00: 250,
+        90.00: 280,
+        110.00: 280,
+        132.00: 315,
+        160.00: 315,
+        200.00: 355,
+        250.00: 355,
+        315.00: 355,
     },
 
+
     # ------------------------------------------------------------
-    # 6 poles
+    # 2p = 6
     # ------------------------------------------------------------
 
     6: {
-        0.55: 160,
-        0.75: 160,
-        1.1: 160,
-        1.5: 160,
-        2.2: 160,
-        3.0: 160,
-        4.0: 180,
-        5.5: 180,
-        7.5: 200,
-        11.0: 200,
-        15.0: 225,
-        18.5: 225,
-        22.0: 250,
-        30.0: 250,
-        37.0: 280,
-        45.0: 280,
-        55.0: 280,
-        75.0: 315,
-        90.0: 315,
-        110.0: 315,
-        132.0: 355,
-        160.0: 355,
-        200.0: 355,
-        250.0: None,
-        315.0: None,
+        0.55: None,
+        0.75: None,
+        1.10: None,
+        1.50: None,
+        2.20: None,
+        3.00: None,
+        4.00: None,
+
+        5.50: 160,
+        7.50: 160,
+        11.00: 180,
+        15.00: 180,
+        18.50: 200,
+        22.00: 200,
+        30.00: 225,
+
+        # Control point:
+        # P2 = 37 kW, 2p = 6
+        # Figure 9.18b -> h approximately 220...230 mm
+        # Standard shaft height -> 225 mm
+        37.00: 225,
+
+        45.00: 225,
+        55.00: 250,
+        75.00: 250,
+        90.00: 280,
+        110.00: 280,
+        132.00: 315,
+        160.00: 315,
+        200.00: 355,
+        250.00: 355,
+        315.00: None,
     },
 
+
     # ------------------------------------------------------------
-    # 8 poles
+    # 2p = 8
     # ------------------------------------------------------------
 
     8: {
-        0.55: 160,
-        0.75: 160,
-        1.1: 160,
-        1.5: 160,
-        2.2: 160,
-        3.0: 180,
-        4.0: 180,
-        5.5: 200,
-        7.5: 200,
-        11.0: 225,
-        15.0: 225,
-        18.5: 250,
-        22.0: 250,
-        30.0: 280,
-        37.0: 280,
-        45.0: 280,
-        55.0: 315,
-        75.0: 315,
-        90.0: 315,
-        110.0: 355,
-        132.0: 355,
-        160.0: 355,
-        200.0: None,
-        250.0: None,
-        315.0: None,
+        0.55: None,
+        0.75: None,
+        1.10: None,
+        1.50: None,
+        2.20: None,
+        3.00: None,
+
+        4.00: 160,
+        5.50: 160,
+        7.50: 180,
+        11.00: 180,
+        15.00: 200,
+        18.50: 200,
+        22.00: 225,
+        30.00: 225,
+        37.00: 250,
+        45.00: 250,
+        55.00: 280,
+        75.00: 280,
+        90.00: 315,
+        110.00: 315,
+        132.00: 355,
+        160.00: 355,
+        200.00: 355,
+        250.00: None,
+        315.00: None,
     },
 }
 
 
 # ================================================================
-# DATASET MAP
+# DATA COLLECTION
 # ================================================================
 
 SHAFT_HEIGHT_DATA = {
-    "IP44": H_IP44,
-    "IP23": H_IP23,
+    "IP44": IP44_SHAFT_HEIGHT_DATA,
+    "IP23": IP23_SHAFT_HEIGHT_DATA,
 }
 
 
 # ================================================================
-# SELECTION FUNCTION
+# NORMALIZE PROTECTION DEGREE
 # ================================================================
 
-def select_shaft_height(power_kw, poles, protection):
+def normalize_protection(protection):
+    """
+    Normalize protection degree.
+
+    Examples:
+
+        ip44
+        IP44
+        Ip44
+
+    ->
+
+        IP44
+    """
+
+    protection = str(
+        protection
+    ).strip().upper()
+
+    if protection not in SHAFT_HEIGHT_DATA:
+
+        raise ValueError(
+            "Unsupported protection degree: "
+            f"{protection}. "
+            "Supported values: IP44, IP23."
+        )
+
+    return protection
+
+
+# ================================================================
+# NORMALIZE NUMBER OF POLES
+# ================================================================
+
+def normalize_poles(poles):
+    """
+    Validate number of poles 2p.
+    """
+
+    try:
+
+        poles = int(
+            poles
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ) as error:
+
+        raise ValueError(
+            "Number of poles 2p must be an integer."
+        ) from error
+
+    if poles not in SUPPORTED_POLES:
+
+        raise ValueError(
+            "Unsupported number of poles 2p: "
+            f"{poles}. "
+            "Supported values: 2, 4, 6, 8."
+        )
+
+    return poles
+
+
+# ================================================================
+# NORMALIZE POWER
+# ================================================================
+
+def normalize_power(power_kw):
+    """
+    Convert input power to float.
+    """
+
+    try:
+
+        power_kw = float(
+            power_kw
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ) as error:
+
+        raise ValueError(
+            "Rated output power P2 must be numeric."
+        ) from error
+
+    if power_kw <= 0:
+
+        raise ValueError(
+            "Rated output power P2 must be greater than zero."
+        )
+
+    return power_kw
+
+
+# ================================================================
+# FIND STANDARD POWER
+# ================================================================
+
+def find_standard_power(
+    power_kw,
+    tolerance=1e-9,
+):
+    """
+    Find an exact standard power value.
+
+    The current DEE Section 1 calculation uses
+    the standard motor power series.
+    """
+
+    for standard_power in STANDARD_POWERS_KW:
+
+        if abs(
+            power_kw
+            - standard_power
+        ) <= tolerance:
+
+            return standard_power
+
+    raise ValueError(
+        f"P2 = {power_kw:g} kW is not included in the "
+        "digitized standard power series for Figure 9.18. "
+        "Use one of the standard P2 values defined in "
+        "STANDARD_POWERS_KW."
+    )
+
+
+# ================================================================
+# SELECT SHAFT HEIGHT
+# ================================================================
+
+def select_shaft_height(
+    power_kw,
+    poles,
+    protection,
+):
     """
     Select standard shaft height h.
 
@@ -391,7 +550,7 @@ def select_shaft_height(power_kw, poles, protection):
         Number of poles 2p.
 
     protection : str
-        Protection degree: IP44 or IP23.
+        IP44 or IP23.
 
     Returns
     -------
@@ -399,91 +558,251 @@ def select_shaft_height(power_kw, poles, protection):
         Standard shaft height h, mm.
     """
 
-    protection = protection.upper()
+    power_kw = normalize_power(
+        power_kw
+    )
 
-    if protection not in SHAFT_HEIGHT_DATA:
-        raise ValueError(
-            f"Unsupported protection degree: {protection}. "
-            "Supported values: IP44, IP23."
-        )
+    poles = normalize_poles(
+        poles
+    )
 
-    if poles not in (2, 4, 6, 8):
-        raise ValueError(
-            f"Unsupported number of poles: 2p = {poles}. "
-            "Supported values: 2, 4, 6, 8."
-        )
+    protection = normalize_protection(
+        protection
+    )
 
-    if power_kw not in STANDARD_POWERS_KW:
-        raise ValueError(
-            f"P2 = {power_kw} kW is not in the standard "
-            "rated power series."
-        )
+    standard_power = find_standard_power(
+        power_kw
+    )
 
-    dataset = SHAFT_HEIGHT_DATA[protection]
+    protection_data = SHAFT_HEIGHT_DATA[
+        protection
+    ]
 
-    shaft_height = dataset[poles][power_kw]
+    pole_data = protection_data[
+        poles
+    ]
+
+    shaft_height = pole_data[
+        standard_power
+    ]
+
+
+    # ============================================================
+    # OUTSIDE DIGITIZED DIAGRAM AREA
+    # ============================================================
 
     if shaft_height is None:
-        raise ValueError(
-            f"No shaft height is available in the current "
-            f"DEE dataset for P2 = {power_kw} kW, "
-            f"2p = {poles}, {protection}."
+
+        figure = (
+            "Figure 9.18a"
+            if protection == "IP44"
+            else "Figure 9.18b"
         )
+
+        raise ValueError(
+            f"P2 = {standard_power:.2f} kW, "
+            f"2p = {poles}, "
+            f"{protection}: "
+            f"combination is outside the accepted "
+            f"digitized area of Kopylov {figure}. "
+            f"Shaft height h cannot be selected "
+            f"reliably from the current digitized data."
+        )
+
+
+    # ============================================================
+    # RESULT
+    # ============================================================
 
     return shaft_height
 
 
 # ================================================================
-# TEST
+# PRINT DATA TABLE
+# ================================================================
+
+def print_shaft_height_table(
+    protection,
+):
+    """
+    Print shaft-height selection table.
+    """
+
+    protection = normalize_protection(
+        protection
+    )
+
+    data = SHAFT_HEIGHT_DATA[
+        protection
+    ]
+
+    figure = (
+        "9.18a"
+        if protection == "IP44"
+        else "9.18b"
+    )
+
+    print()
+    print("=" * 82)
+
+    print(
+        "DEE - SHAFT HEIGHT SELECTION"
+    )
+
+    print(
+        f"KOPYLOV FIGURE {figure}"
+    )
+
+    print(
+        f"PROTECTION DEGREE: {protection}"
+    )
+
+    print("=" * 82)
+
+    print(
+        f"{'P2, kW':>10} | "
+        f"{'2p=2':>12} | "
+        f"{'2p=4':>12} | "
+        f"{'2p=6':>12} | "
+        f"{'2p=8':>12}"
+    )
+
+    print("-" * 82)
+
+    for power_kw in STANDARD_POWERS_KW:
+
+        row = [
+            f"{power_kw:10.2f}"
+        ]
+
+        for poles in SUPPORTED_POLES:
+
+            shaft_height = data[
+                poles
+            ][
+                power_kw
+            ]
+
+            if shaft_height is None:
+
+                value = "N/A"
+
+            else:
+
+                value = (
+                    f"{shaft_height} mm"
+                )
+
+            row.append(
+                f"{value:>12}"
+            )
+
+        print(
+            " | ".join(
+                row
+            )
+        )
+
+    print("=" * 82)
+
+
+# ================================================================
+# MODULE TEST
 # ================================================================
 
 if __name__ == "__main__":
 
-    print("=" * 74)
+    print()
+    print("=" * 82)
     print("DEE - SHAFT HEIGHT SELECTION TEST")
-    print("=" * 74)
+    print("=" * 82)
 
-    for protection in ("IP44", "IP23"):
 
-        print()
-        print("=" * 74)
-        print(f"PROTECTION DEGREE: {protection}")
-        print("=" * 74)
+    # ============================================================
+    # IP44 TABLE
+    # ============================================================
 
-        print(
-            f"{'P2, kW':>10} | "
-            f"{'2p=2':>10} | "
-            f"{'2p=4':>10} | "
-            f"{'2p=6':>10} | "
-            f"{'2p=8':>10}"
-        )
+    print_shaft_height_table(
+        protection="IP44"
+    )
 
-        print("-" * 74)
 
-        for power_kw in STANDARD_POWERS_KW:
+    # ============================================================
+    # IP23 TABLE
+    # ============================================================
 
-            results = []
+    print_shaft_height_table(
+        protection="IP23"
+    )
 
-            for poles in (2, 4, 6, 8):
 
-                try:
+    # ============================================================
+    # CONTROL TEST
+    #
+    # This is intentionally retained as an engineering
+    # regression check.
+    # ============================================================
 
-                    h = select_shaft_height(
-                        power_kw=power_kw,
-                        poles=poles,
-                        protection=protection,
-                    )
+    print()
+    print("=" * 82)
+    print("CONTROL TEST")
+    print("=" * 82)
 
-                    results.append(f"{h} mm")
+    control_cases = (
 
-                except ValueError:
+        (
+            15.0,
+            4,
+            "IP44",
+        ),
 
-                    results.append("N/A")
+        (
+            55.0,
+            8,
+            "IP44",
+        ),
+
+        (
+            37.0,
+            6,
+            "IP23",
+        ),
+
+        (
+            55.0,
+            6,
+            "IP23",
+        ),
+    )
+
+    for (
+        power_kw,
+        poles,
+        protection,
+    ) in control_cases:
+
+        try:
+
+            shaft_height = select_shaft_height(
+                power_kw=power_kw,
+                poles=poles,
+                protection=protection,
+            )
 
             print(
-                f"{power_kw:10.2f} | "
-                f"{results[0]:>10} | "
-                f"{results[1]:>10} | "
-                f"{results[2]:>10} | "
-                f"{results[3]:>10}"
+                f"P2 = {power_kw:7.2f} kW | "
+                f"2p = {poles:2d} | "
+                f"{protection:4s} | "
+                f"h = {shaft_height:3d} mm"
             )
+
+        except ValueError as error:
+
+            print(
+                f"P2 = {power_kw:7.2f} kW | "
+                f"2p = {poles:2d} | "
+                f"{protection:4s} | "
+                f"ERROR: {error}"
+            )
+
+    print("=" * 82)
