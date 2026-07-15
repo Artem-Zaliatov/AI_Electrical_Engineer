@@ -3,3 +3,27 @@
 ✅ Git
 ✅ GitHub Desktop (по желанию, сначала можно без него)
 ✅ ChatGPT Desktop
+
+Расчет и создание Ворд-отчета
+
+py main.py 
+start .\reports\Section_01_Main_Dimensions.docx
+
+
+Сохранение
+
+File → Save All
+
+Что происходит: git status показывает изменения, git add . 
+добавляет все изменённые и новые файлы в будущий коммит, 
+git commit сохраняет текущую версию проекта локально в Git, 
+а git push отправляет коммит в GitHub
+
+git status
+git add .
+git commit -m "Complete Section 1 main dimensions calculation"
+git push
+
+Одной строкой
+
+git add .; git commit -m "Update DEE project"; git push

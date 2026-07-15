@@ -2033,6 +2033,6 @@ if __name__ == "__main__":
     )
 
     print(
-        "This module must be called from main.py "
+        "This module must be called from AC_designmain.py "
         "with the final Section 1 calculation result."
     )
