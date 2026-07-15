@@ -238,9 +238,10 @@ def check_motor_starter_coordination(
         )
 
         voltage_match = (
-            record["system_voltage_v"]
-            == system_voltage_v
-        )
+             record["system_voltage_min_v"]
+             <= system_voltage_v
+            <= record["system_voltage_max_v"]
+)
 
         starting_method_match = (
             record["starting_method"]

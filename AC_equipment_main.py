@@ -25,6 +25,10 @@ Current development stage:
 # IMPORTS
 # =============================================================================
 
+from src.reports.ac_motor_feeder_word_report import (
+    create_ac_motor_feeder_word_report,
+)
+
 from src.ac_motor_feeder.motor_data import (
     validate_motor_data,
     get_connection_description,
@@ -74,6 +78,14 @@ from src.ac_motor_feeder.contactor import (
 
 from src.ac_motor_feeder.motor_starter_coordination import (
     check_motor_starter_coordination,
+)
+
+from src.ac_motor_feeder.motor_starter_coordination_optimizer import (
+    optimize_motor_starter_coordination,
+)
+
+from src.ac_motor_feeder.final_design_check import (
+    check_final_motor_feeder_design,
 )
 
 # =============================================================================
@@ -1386,17 +1398,42 @@ def main():
 
     print("=" * 76)
 
-    # =========================================================================
+       # =========================================================================
     # SECTION 9 - MOTOR STARTER COORDINATION
     # =========================================================================
 
     motor_starter_coordination = check_motor_starter_coordination(
-    motor=motor,
-    motor_circuit_breaker=motor_circuit_breaker,
-    contactor=contactor,
-    short_circuit=short_circuit,
-    installation=installation,
-)
+        motor=motor,
+        motor_circuit_breaker=motor_circuit_breaker,
+        contactor=contactor,
+        short_circuit=short_circuit,
+        installation=installation,
+    )
+
+    # -------------------------------------------------------------------------
+    # AUTOMATIC TYPE 2 COORDINATION CORRECTION
+    # -------------------------------------------------------------------------
+
+    motor_starter_coordination_optimization = None
+
+    if (
+        motor_starter_coordination["coordination_status"]
+        != "VERIFIED"
+    ):
+
+        motor_starter_coordination_optimization = (
+            optimize_motor_starter_coordination(
+                motor=motor,
+                motor_circuit_breaker=motor_circuit_breaker,
+                contactor=contactor,
+                short_circuit=short_circuit,
+                installation=installation,
+            )
+        )
+
+    # -------------------------------------------------------------------------
+    # SECTION 9 OUTPUT
+    # -------------------------------------------------------------------------
 
     print()
     print("=" * 76)
@@ -1425,6 +1462,14 @@ def main():
         f"(motor feeder system voltage)"
     )
 
+    if "system_voltage_group" in motor_starter_coordination:
+
+        print(
+            f"Coordination voltage group    = "
+            f"{motor_starter_coordination['system_voltage_group']} "
+            f"(Schneider Electric coordination table voltage group)"
+        )
+
     print(
         f"Calculated short-circuit Ik3  = "
         f"{motor_starter_coordination['short_circuit_current_ka']:.2f} kA "
@@ -1442,7 +1487,7 @@ def main():
     print(
         f"Coordination type             = "
         f"{motor_starter_coordination['coordination_type']} "
-        f"(Schneider Electric coordination type)"
+        f"(IEC motor starter coordination type)"
     )
 
     coordination_short_circuit_ka = (
@@ -1454,37 +1499,37 @@ def main():
     if coordination_short_circuit_ka is None:
 
         print(
-            f"Coordination short-circuit    = "
+            f"Coordination short-circuit Iq = "
             f"NOT AVAILABLE "
-            f"(verified coordination level is not digitized)"
+            f"(coordination table value is not available)"
         )
 
     else:
 
         print(
-            f"Coordination short-circuit    = "
+            f"Coordination short-circuit Iq = "
             f"{coordination_short_circuit_ka:.2f} kA "
-            f"(maximum verified coordination fault level)"
+            f"(Schneider Electric Type 2 coordination table level)"
         )
 
     print(
-        f"Short-circuit coordination    = "
+        f"Coordination condition        = "
         f"{motor_starter_coordination['short_circuit_coordination_check']} "
-        f"(calculated Ik3 against coordination table level)"
+        f"(Ik3 <= Iq coordination condition)"
     )
 
     print()
 
     print(
-        f"Coordination table status     = "
+        f"Table record status           = "
         f"{motor_starter_coordination['table_record_status']} "
-        f"(coordination data verification status)"
+        f"(digitized coordination record status)"
     )
 
     print(
         f"Coordination source           = "
         f"{motor_starter_coordination['coordination_source']} "
-        f"(coordination data source)"
+        f"(Schneider Electric source document)"
     )
 
     print(
@@ -1493,11 +1538,336 @@ def main():
         f"(motor starter coordination status)"
     )
 
+    # -------------------------------------------------------------------------
+    # AUTOMATIC TYPE 2 COORDINATION CORRECTION OUTPUT
+    # -------------------------------------------------------------------------
+
+    if motor_starter_coordination_optimization is not None:
+
+        print()
+        print("-" * 76)
+        print("AUTOMATIC TYPE 2 COORDINATION CORRECTION")
+        print("-" * 76)
+
+        print()
+
+        print(
+            f"Initial circuit breaker       = "
+            f"{motor_starter_coordination_optimization['initial_breaker_reference']} "
+            f"(independently selected motor circuit breaker)"
+        )
+
+        print(
+            f"Initial contactor             = "
+            f"{motor_starter_coordination_optimization['initial_contactor_reference']} "
+            f"(independently selected contactor)"
+        )
+
+        print()
+
+        selected_breaker_reference = (
+            motor_starter_coordination_optimization[
+                "selected_breaker_reference"
+            ]
+        )
+
+        selected_contactor_reference = (
+            motor_starter_coordination_optimization[
+                "selected_contactor_reference"
+            ]
+        )
+
+        if selected_breaker_reference is None:
+
+            print(
+                f"Coordinated circuit breaker   = "
+                f"NOT AVAILABLE "
+                f"(no coordinated table combination found)"
+            )
+
+        else:
+
+            print(
+                f"Coordinated circuit breaker   = "
+                f"{selected_breaker_reference} "
+                f"(Type 2 coordinated motor protection device)"
+            )
+
+        if selected_contactor_reference is None:
+
+            print(
+                f"Coordinated contactor         = "
+                f"NOT AVAILABLE "
+                f"(no coordinated table combination found)"
+            )
+
+        else:
+
+            print(
+                f"Coordinated contactor         = "
+                f"{selected_contactor_reference} "
+                f"(Type 2 coordinated motor contactor)"
+            )
+
+        print()
+
+        optimized_coordination_short_circuit_ka = (
+            motor_starter_coordination_optimization[
+                "coordination_short_circuit_ka"
+            ]
+        )
+
+        if optimized_coordination_short_circuit_ka is None:
+
+            print(
+                f"Coordination short-circuit Iq = "
+                f"NOT AVAILABLE "
+                f"(no verified coordination level found)"
+            )
+
+        else:
+
+            print(
+                f"Coordination short-circuit Iq = "
+                f"{optimized_coordination_short_circuit_ka:.2f} kA "
+                f"(Schneider Electric Type 2 coordination level)"
+            )
+
+        print(
+            f"Coordination condition        = "
+            f"{motor_starter_coordination_optimization['coordination_condition']} "
+            f"(Ik3 <= Iq coordination condition)"
+        )
+
+        print(
+            f"Combination changed           = "
+            f"{motor_starter_coordination_optimization['combination_changed']} "
+            f"(initial equipment combination correction status)"
+        )
+
+        print()
+
+        print(
+            f"Optimization source           = "
+            f"{motor_starter_coordination_optimization['optimization_source']} "
+            f"(Schneider Electric coordination table source)"
+        )
+
+        print(
+            f"Optimization status           = "
+            f"{motor_starter_coordination_optimization['optimization_status']} "
+            f"(coordination optimization result)"
+        )
+
     print("=" * 76)
 
+    # =========================================================================
+    # SECTION 10 - FINAL MOTOR FEEDER DESIGN CHECK
+    # =========================================================================
+
+    final_design_check = check_final_motor_feeder_design(
+        design_current=design_current,
+        cable=cable,
+        voltage_drop=voltage_drop,
+        starting_voltage_drop=starting_voltage_drop,
+        short_circuit=short_circuit,
+        motor_circuit_breaker=motor_circuit_breaker,
+        contactor=contactor,
+        motor_starter_coordination=motor_starter_coordination,
+        motor_starter_coordination_optimization=(
+            motor_starter_coordination_optimization
+        ),
+    )
+
+        # -------------------------------------------------------------------------
+    # SECTION 10 OUTPUT
+    # -------------------------------------------------------------------------
+
+    print()
+    print("=" * 76)
+    print("SECTION 10 - FINAL MOTOR FEEDER DESIGN CHECK")
+    print("=" * 76)
+
+    print()
+
+    print(
+        f"Motor design current IB       = "
+        f"{final_design_check['design_current_a']:.2f} A "
+        f"(motor feeder design current)"
+    )
+
+    print(
+        f"Cable current capacity Iz     = "
+        f"{final_design_check['cable_ampacity_a']:.2f} A "
+        f"(selected cable current-carrying capacity)"
+    )
+
+    print(
+        f"Short-circuit current Ik3     = "
+        f"{final_design_check['short_circuit_current_ka']:.2f} kA "
+        f"(prospective feeder-end short-circuit current)"
+    )
+
+    print()
+
+    print(
+        f"Cable current capacity        = "
+        f"{final_design_check['cable_current_capacity_check']} "
+        f"(IB <= Iz current-capacity condition)"
+    )
+
+    print(
+        f"Cable selection               = "
+        f"{final_design_check['cable_selection_check']} "
+        f"(cable selection status)"
+    )
+
+    print(
+        f"Steady-state voltage drop     = "
+        f"{final_design_check['steady_state_voltage_drop_check']} "
+        f"(steady-state voltage-drop check)"
+    )
+
+    print(
+        f"Starting voltage drop         = "
+        f"{final_design_check['motor_starting_voltage_drop_check']} "
+        f"(motor starting voltage-drop check)"
+    )
+
+    print(
+        f"Circuit breaker selection     = "
+        f"{final_design_check['motor_circuit_breaker_selection_check']} "
+        f"(motor circuit breaker selection status)"
+    )
+
+    print(
+        f"Breaking capacity             = "
+        f"{final_design_check['breaking_capacity_check']} "
+        f"(circuit breaker short-circuit breaking capacity check)"
+    )
+
+    print(
+        f"Contactor selection           = "
+        f"{final_design_check['contactor_selection_check']} "
+        f"(motor contactor selection status)"
+    )
+
+    print(
+        f"Type 2 coordination           = "
+        f"{final_design_check['type_2_coordination_check']} "
+        f"(Schneider Electric motor starter coordination check)"
+    )
+
+    print()
+
+    print(
+        f"Initial circuit breaker       = "
+        f"{final_design_check['initial_breaker_reference']} "
+        f"(initially selected motor protection device)"
+    )
+
+    print(
+        f"Initial contactor             = "
+        f"{final_design_check['initial_contactor_reference']} "
+        f"(initially selected motor contactor)"
+    )
+
+    print()
+
+    print(
+        f"Final circuit breaker         = "
+        f"{final_design_check['final_breaker_reference']} "
+        f"(final motor protection device reference)"
+    )
+
+    print(
+        f"Final contactor               = "
+        f"{final_design_check['final_contactor_reference']} "
+        f"(final motor contactor reference)"
+    )
+
+    print(
+        f"Final coordination source     = "
+        f"{final_design_check['final_coordination_source']} "
+        f"(final equipment combination source)"
+    )
+
+    print()
+
+    print(
+        f"Failed design checks          = "
+        f"{final_design_check['failed_design_check_count']} "
+        f"(number of failed final design checks)"
+    )
+
+    if final_design_check["failed_design_checks"]:
+
+        print(
+            f"Failed check list             = "
+            f"{', '.join(final_design_check['failed_design_checks'])} "
+            f"(final design checks requiring correction)"
+        )
+
+    print()
+
+    print(
+        f"FINAL DESIGN STATUS           = "
+        f"{final_design_check['final_design_status']} "
+        f"(final motor feeder design assessment)"
+    )
+
+    print("=" * 76)
+
+    # =========================================================================
+    # WORD REPORT
+    # =========================================================================
+
+    print()
+    print("=" * 76)
+    print("WORD REPORT")
+    print("=" * 76)
+
+    report_path = create_ac_motor_feeder_word_report(
+        motor=motor,
+        installation=installation,
+        supply=supply,
+        design_current=design_current,
+        starting_current=starting_current,
+        cable=cable,
+        voltage_drop=voltage_drop,
+        starting_voltage_drop=starting_voltage_drop,
+        short_circuit=short_circuit,
+        motor_circuit_breaker=motor_circuit_breaker,
+        contactor=contactor,
+        motor_starter_coordination=motor_starter_coordination,
+        motor_starter_coordination_optimization=(
+            motor_starter_coordination_optimization
+        ),
+        final_design_check=final_design_check,
+    )
+
+    print()
+
+    print(
+        f"Word report created           = "
+        f"{report_path} "
+        f"(AC motor feeder technical calculation report)"
+    )
+
+    print("=" * 76)
+
+ # =========================================================================
+    # OPEN WORD REPORT
+ # =========================================================================
+
+    import os
+
+    os.startfile(report_path)
+
 # =============================================================================
-# PROGRAM START
+# PROGRAM ENTRY POINT
 # =============================================================================
 
 if __name__ == "__main__":
+
     main()

@@ -6,39 +6,36 @@ SCHNEIDER ELECTRIC DIGITAL PRODUCT DATA
 MOTOR STARTER TYPE 2 COORDINATION DATA
 
 This module stores digitized Schneider Electric
-motor starter coordination records.
+motor starter Type 2 coordination records.
 
-The coordination data are intentionally separated
-from calculation and equipment selection algorithms.
-
-Current application:
+Application:
 
     three-phase asynchronous motor;
     Direct-On-Line starting;
     Schneider Electric TeSys motor starter;
-    Type 2 coordination.
+    IEC Type 2 coordination.
 
 IMPORTANT:
 
 Coordination is a property of the complete tested combination:
 
-    short-circuit protective device
+    motor circuit breaker
     +
     contactor
-    +
-    overload protection arrangement
 
-A coordination type must not be inferred only from
-individual device current ratings.
+The coordination short-circuit current Iq must be taken
+from the Schneider Electric coordination table.
 
-Source class:
+It must not be inferred from individual device ratings.
 
-    Schneider Electric TeSys Selection Guide
-    IE3 / IE4 Type 2 Coordination Charts
+Source:
 
-DEE data status:
+    Schneider Electric
+    TeSys IE3 / IE4 Type 2 Coordination Charts
 
-    OFFICIAL TABLE DIGITIZATION IN PROGRESS
+Coordination standard:
+
+    IEC 60947-4-1
 """
 
 
@@ -51,76 +48,198 @@ SCHNEIDER_COORDINATION_DATA_SOURCE = {
         "SCHNEIDER ELECTRIC",
 
     "document_title":
-        "TESYS SELECTION GUIDE IE3/IE4 TYPE 2 COORDINATION CHARTS",
+        "TESYS IE3/IE4 TYPE 2 COORDINATION CHARTS",
 
     "document_reference":
         "TESYS_SELECTION_GUIDE",
+
+    "coordination_standard":
+        "IEC 60947-4-1",
 
     "coordination_type":
         "TYPE 2",
 
     "data_status":
-        "OFFICIAL TABLE DIGITIZATION IN PROGRESS",
+        "VERIFIED SOURCE TABLE DATA",
 }
 
 
 # =============================================================================
-# MOTOR STARTER COORDINATION DATA
+# MOTOR STARTER TYPE 2 COORDINATION DATA
 #
-# TABLE STRUCTURE
+# 400 / 415 V
 #
-# Each record represents one Schneider Electric
-# tested motor starter combination.
+# Starting method:
 #
-# Fields:
+#     DOL - Direct-On-Line
 #
-# motor_power_kw
-#     Motor rated output power at the table voltage.
+# Protection:
 #
-# system_voltage_v
-#     Coordination table operational voltage.
+#     motor circuit breaker with built-in overload protection
 #
-# starting_method
-#     Motor starting method.
+# Contactor:
 #
-# motor_circuit_breaker_reference
-#     Schneider Electric motor circuit breaker reference.
+#     Schneider Electric TeSys contactor
 #
-# contactor_base_reference
-#     Base contactor reference without coil suffix.
+# Iq:
 #
-# coordination_type
-#     IEC coordination type.
-#
-# coordination_short_circuit_ka
-#     Maximum table coordination short-circuit level.
-#
-# table_record_status
-#     VERIFIED only after direct table digitization.
+#     coordination short-circuit current according
+#     to the Schneider Electric Type 2 coordination table
 # =============================================================================
 
 SCHNEIDER_MOTOR_STARTER_COORDINATION_DATA = (
 
-    # =========================================================================
-    # 400 V - DOL - TYPE 2
-    # =========================================================================
+    # -------------------------------------------------------------------------
+    # 1.5 kW
+    # -------------------------------------------------------------------------
+
+    {
+        "motor_power_kw": 1.5,
+        "system_voltage_group": "400/415 V",
+        "system_voltage_min_v": 400.0,
+        "system_voltage_max_v": 415.0,
+        "starting_method": "DOL",
+        "motor_circuit_breaker_reference": "GV2ME08",
+        "contactor_base_reference": "LC1D09",
+        "coordination_type": "TYPE 2",
+        "coordination_short_circuit_ka": 130.0,
+        "table_record_status": "VERIFIED",
+    },
+
+    # -------------------------------------------------------------------------
+    # 2.2 kW
+    # -------------------------------------------------------------------------
+
+    {
+        "motor_power_kw": 2.2,
+        "system_voltage_group": "400/415 V",
+        "system_voltage_min_v": 400.0,
+        "system_voltage_max_v": 415.0,
+        "starting_method": "DOL",
+        "motor_circuit_breaker_reference": "GV2ME10",
+        "contactor_base_reference": "LC1D09",
+        "coordination_type": "TYPE 2",
+        "coordination_short_circuit_ka": 130.0,
+        "table_record_status": "VERIFIED",
+    },
+
+    # -------------------------------------------------------------------------
+    # 3.0 kW
+    # -------------------------------------------------------------------------
+
+    {
+        "motor_power_kw": 3.0,
+        "system_voltage_group": "400/415 V",
+        "system_voltage_min_v": 400.0,
+        "system_voltage_max_v": 415.0,
+        "starting_method": "DOL",
+        "motor_circuit_breaker_reference": "GV2ME14",
+        "contactor_base_reference": "LC1D09",
+        "coordination_type": "TYPE 2",
+        "coordination_short_circuit_ka": 130.0,
+        "table_record_status": "VERIFIED",
+    },
+
+    # -------------------------------------------------------------------------
+    # 4.0 kW
+    # -------------------------------------------------------------------------
+
+    {
+        "motor_power_kw": 4.0,
+        "system_voltage_group": "400/415 V",
+        "system_voltage_min_v": 400.0,
+        "system_voltage_max_v": 415.0,
+        "starting_method": "DOL",
+        "motor_circuit_breaker_reference": "GV2ME14",
+        "contactor_base_reference": "LC1D09",
+        "coordination_type": "TYPE 2",
+        "coordination_short_circuit_ka": 130.0,
+        "table_record_status": "VERIFIED",
+    },
+
+    # -------------------------------------------------------------------------
+    # 5.5 kW
+    # -------------------------------------------------------------------------
+
+    {
+        "motor_power_kw": 5.5,
+        "system_voltage_group": "400/415 V",
+        "system_voltage_min_v": 400.0,
+        "system_voltage_max_v": 415.0,
+        "starting_method": "DOL",
+        "motor_circuit_breaker_reference": "GV2ME16",
+        "contactor_base_reference": "LC1D25",
+        "coordination_type": "TYPE 2",
+        "coordination_short_circuit_ka": 130.0,
+        "table_record_status": "VERIFIED",
+    },
+
+    # -------------------------------------------------------------------------
+    # 7.5 kW
+    # -------------------------------------------------------------------------
+
+    {
+        "motor_power_kw": 7.5,
+        "system_voltage_group": "400/415 V",
+        "system_voltage_min_v": 400.0,
+        "system_voltage_max_v": 415.0,
+        "starting_method": "DOL",
+        "motor_circuit_breaker_reference": "GV2ME20",
+        "contactor_base_reference": "LC1D25",
+        "coordination_type": "TYPE 2",
+        "coordination_short_circuit_ka": 50.0,
+        "table_record_status": "VERIFIED",
+    },
+
+    # -------------------------------------------------------------------------
+    # 9.0 kW
+    # -------------------------------------------------------------------------
+
+    {
+        "motor_power_kw": 9.0,
+        "system_voltage_group": "400/415 V",
+        "system_voltage_min_v": 400.0,
+        "system_voltage_max_v": 415.0,
+        "starting_method": "DOL",
+        "motor_circuit_breaker_reference": "GV2ME21",
+        "contactor_base_reference": "LC1D25",
+        "coordination_type": "TYPE 2",
+        "coordination_short_circuit_ka": 50.0,
+        "table_record_status": "VERIFIED",
+    },
+
+    # -------------------------------------------------------------------------
+    # 11.0 kW
+    # -------------------------------------------------------------------------
+
+    {
+        "motor_power_kw": 11.0,
+        "system_voltage_group": "400/415 V",
+        "system_voltage_min_v": 400.0,
+        "system_voltage_max_v": 415.0,
+        "starting_method": "DOL",
+        "motor_circuit_breaker_reference": "GV2ME22",
+        "contactor_base_reference": "LC1D25",
+        "coordination_type": "TYPE 2",
+        "coordination_short_circuit_ka": 50.0,
+        "table_record_status": "VERIFIED",
+    },
+
+    # -------------------------------------------------------------------------
+    # 15.0 kW
+    # -------------------------------------------------------------------------
 
     {
         "motor_power_kw": 15.0,
-
-        "system_voltage_v": 400.0,
-
+        "system_voltage_group": "400/415 V",
+        "system_voltage_min_v": 400.0,
+        "system_voltage_max_v": 415.0,
         "starting_method": "DOL",
-
         "motor_circuit_breaker_reference": "GV2ME32",
-
         "contactor_base_reference": "LC1D32",
-
         "coordination_type": "TYPE 2",
-
-        "coordination_short_circuit_ka": None,
-
-        "table_record_status": "PENDING SOURCE DIGITIZATION",
+        "coordination_short_circuit_ka": 35.0,
+        "table_record_status": "VERIFIED",
     },
 
 )
