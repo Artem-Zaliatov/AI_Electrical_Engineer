@@ -3,22 +3,19 @@ Digital Electrical Engineer (DEE)
 
 SECTION 01 WORD REPORT GENERATOR
 
-Generation of a Microsoft Word report for:
-
-    SECTION 1
-    SELECTION OF MAIN DIMENSIONS
+Section 1:
+SELECTION OF MAIN DIMENSIONS
 
 Kopylov asynchronous motor design method.
 
 Document formatting:
+    Font              : Times New Roman
+    Font size         : 14 pt
+    Line spacing      : 1.5
+    First line indent : 1.25 cm
+    Text alignment    : justified
 
-    Font: Times New Roman
-    Font size: 14 pt
-    Line spacing: 1.5
-    First line indent: 1.25 cm
-    Text alignment: justified
-
-Equations are created as native Microsoft Word
+Equations are generated as native Microsoft Word
 Office Math objects using OMML.
 """
 
@@ -28,10 +25,6 @@ from docx import Document
 
 from docx.enum.text import (
     WD_ALIGN_PARAGRAPH,
-)
-
-from docx.enum.section import (
-    WD_SECTION,
 )
 
 from docx.shared import (
@@ -92,7 +85,9 @@ def set_run_font(
 
     run.font.italic = italic
 
-    run_properties = run._element.get_or_add_rPr()
+    run_properties = (
+        run._element.get_or_add_rPr()
+    )
 
     run_fonts = run_properties.rFonts
 
@@ -139,9 +134,13 @@ def format_paragraph(
 
     paragraph.alignment = alignment
 
-    paragraph_format = paragraph.paragraph_format
+    paragraph_format = (
+        paragraph.paragraph_format
+    )
 
-    paragraph_format.line_spacing = LINE_SPACING
+    paragraph_format.line_spacing = (
+        LINE_SPACING
+    )
 
     paragraph_format.space_before = Pt(
         0
@@ -171,7 +170,7 @@ def add_text_paragraph(
     first_line_indent=True,
 ):
     """
-    Add a standard formatted text paragraph.
+    Add standard formatted text paragraph.
     """
 
     paragraph = document.add_paragraph()
@@ -189,51 +188,6 @@ def add_text_paragraph(
     set_run_font(
         run
     )
-
-    return paragraph
-
-
-def add_mixed_paragraph(
-    document,
-    parts,
-    alignment=WD_ALIGN_PARAGRAPH.JUSTIFY,
-    first_line_indent=True,
-):
-    """
-    Add a paragraph containing differently formatted runs.
-
-    parts format:
-
-        [
-            ("text", False, False),
-            ("bold text", True, False),
-            ("italic text", False, True),
-        ]
-    """
-
-    paragraph = document.add_paragraph()
-
-    format_paragraph(
-        paragraph=paragraph,
-        alignment=alignment,
-        first_line_indent=first_line_indent,
-    )
-
-    for (
-        text,
-        bold,
-        italic,
-    ) in parts:
-
-        run = paragraph.add_run(
-            text
-        )
-
-        set_run_font(
-            run=run,
-            bold=bold,
-            italic=italic,
-        )
 
     return paragraph
 
@@ -258,14 +212,6 @@ def add_section_title(
         first_line_indent=False,
     )
 
-    paragraph.paragraph_format.space_before = Pt(
-        0
-    )
-
-    paragraph.paragraph_format.space_after = Pt(
-        0
-    )
-
     run = paragraph.add_run(
         text
     )
@@ -279,14 +225,14 @@ def add_section_title(
 
 
 # ================================================================
-# OMML EQUATION ELEMENTS
+# OMML BASIC ELEMENTS
 # ================================================================
 
 def create_math_run(
     text,
 ):
     """
-    Create OMML mathematical run.
+    Create a native OMML mathematical run.
     """
 
     math_run = OxmlElement(
@@ -333,7 +279,7 @@ def create_math_text(
     text,
 ):
     """
-    Create a simple OMML math element.
+    Create simple OMML mathematical text.
     """
 
     return create_math_run(
@@ -341,63 +287,142 @@ def create_math_text(
     )
 
 
-def create_fraction(
-    numerator,
-    denominator,
+# ================================================================
+# OMML CONTENT APPENDER
+# ================================================================
+
+def append_math_content(
+    parent,
+    content,
 ):
     """
-    Create OMML fraction.
+    Append mathematical content to an OMML element.
+
+    Supported content:
+        str
+        OMML element
+        list / tuple of str and OMML elements
     """
 
-    fraction = OxmlElement(
-        "m:f"
-    )
+    if isinstance(
+        content,
+        str,
+    ):
 
-    fraction_properties = OxmlElement(
-        "m:fPr"
-    )
-
-    fraction.append(
-        fraction_properties
-    )
-
-    numerator_element = OxmlElement(
-        "m:num"
-    )
-
-    numerator_element.append(
-        create_math_text(
-            numerator
+        parent.append(
+            create_math_text(
+                content
+            )
         )
+
+        return
+
+
+    if isinstance(
+        content,
+        (list, tuple),
+    ):
+
+        for element in content:
+
+            append_math_content(
+                parent=parent,
+                content=element,
+            )
+
+        return
+
+
+    parent.append(
+        content
     )
 
-    denominator_element = OxmlElement(
-        "m:den"
+
+# ================================================================
+# OMML SUBSCRIPT
+# ================================================================
+
+def create_subscript(
+    base,
+    subscript,
+):
+    """
+    Create native OMML lower index.
+
+    Examples:
+        P_2
+        U_1
+        D_a
+        K_D
+        K_E
+        B_delta
+        alpha_delta
+        k_B
+        k_ob1
+        n_1
+        l_delta
+    """
+
+    subscript_element = OxmlElement(
+        "m:sSub"
     )
 
-    denominator_element.append(
-        create_math_text(
-            denominator
-        )
+    subscript_properties = OxmlElement(
+        "m:sSubPr"
     )
 
-    fraction.append(
-        numerator_element
+    subscript_element.append(
+        subscript_properties
     )
 
-    fraction.append(
-        denominator_element
+
+    # BASE
+
+    base_element = OxmlElement(
+        "m:e"
     )
 
-    return fraction
+    append_math_content(
+        parent=base_element,
+        content=base,
+    )
 
+    subscript_element.append(
+        base_element
+    )
+
+
+    # SUBSCRIPT
+
+    subscript_value = OxmlElement(
+        "m:sub"
+    )
+
+    append_math_content(
+        parent=subscript_value,
+        content=subscript,
+    )
+
+    subscript_element.append(
+        subscript_value
+    )
+
+    return subscript_element
+
+
+# ================================================================
+# OMML SUPERSCRIPT
+# ================================================================
 
 def create_superscript(
     base,
     exponent,
 ):
     """
-    Create OMML superscript.
+    Create native OMML superscript.
+
+    Example:
+        D^2
     """
 
     superscript = OxmlElement(
@@ -412,28 +437,32 @@ def create_superscript(
         superscript_properties
     )
 
+
+    # BASE
+
     base_element = OxmlElement(
         "m:e"
     )
 
-    base_element.append(
-        create_math_text(
-            base
-        )
+    append_math_content(
+        parent=base_element,
+        content=base,
     )
+
+    superscript.append(
+        base_element
+    )
+
+
+    # EXPONENT
 
     exponent_element = OxmlElement(
         "m:sup"
     )
 
-    exponent_element.append(
-        create_math_text(
-            exponent
-        )
-    )
-
-    superscript.append(
-        base_element
+    append_math_content(
+        parent=exponent_element,
+        content=exponent,
     )
 
     superscript.append(
@@ -443,11 +472,79 @@ def create_superscript(
     return superscript
 
 
+# ================================================================
+# OMML FRACTION
+# ================================================================
+
+def create_fraction(
+    numerator,
+    denominator,
+):
+    """
+    Create native OMML fraction.
+
+    Numerator and denominator may contain:
+        str
+        OMML element
+        list / tuple of OMML elements
+    """
+
+    fraction = OxmlElement(
+        "m:f"
+    )
+
+    fraction_properties = OxmlElement(
+        "m:fPr"
+    )
+
+    fraction.append(
+        fraction_properties
+    )
+
+
+    # NUMERATOR
+
+    numerator_element = OxmlElement(
+        "m:num"
+    )
+
+    append_math_content(
+        parent=numerator_element,
+        content=numerator,
+    )
+
+    fraction.append(
+        numerator_element
+    )
+
+
+    # DENOMINATOR
+
+    denominator_element = OxmlElement(
+        "m:den"
+    )
+
+    append_math_content(
+        parent=denominator_element,
+        content=denominator,
+    )
+
+    fraction.append(
+        denominator_element
+    )
+
+    return fraction
+
+
+# ================================================================
+# OMML RADICAL
+# ================================================================
+
 def create_radical(
     expression,
 ):
     """
-    Create OMML square root.
+    Create native OMML square root.
     """
 
     radical = OxmlElement(
@@ -475,6 +572,9 @@ def create_radical(
         radical_properties
     )
 
+
+    # EMPTY DEGREE
+
     degree_element = OxmlElement(
         "m:deg"
     )
@@ -483,14 +583,16 @@ def create_radical(
         degree_element
     )
 
+
+    # RADICAL EXPRESSION
+
     expression_element = OxmlElement(
         "m:e"
     )
 
-    expression_element.append(
-        create_math_text(
-            expression
-        )
+    append_math_content(
+        parent=expression_element,
+        content=expression,
     )
 
     radical.append(
@@ -510,20 +612,18 @@ def add_equation(
     equation_number=None,
 ):
     """
-    Add centered native Word equation.
+    Add native Microsoft Word equation.
 
-    If equation_number is specified, a borderless
-    3-column table is used:
+    Numbered equation layout:
 
-        empty | equation | number
+        left cell | centered equation | equation number
 
-    This keeps the equation centered and the
-    equation number aligned to the right.
+    The table borders are hidden.
     """
 
     if not isinstance(
         equation_elements,
-        list,
+        (list, tuple),
     ):
 
         equation_elements = [
@@ -553,11 +653,10 @@ def add_equation(
             "m:oMath"
         )
 
-        for element in equation_elements:
-
-            math_object.append(
-                element
-            )
+        append_math_content(
+            parent=math_object,
+            content=equation_elements,
+        )
 
         math_paragraph.append(
             math_object
@@ -581,17 +680,10 @@ def add_equation(
 
     table.autofit = False
 
-    table.columns[0].width = Cm(
-        2.0
-    )
 
-    table.columns[1].width = Cm(
-        12.0
-    )
-
-    table.columns[2].width = Cm(
-        2.0
-    )
+    # ============================================================
+    # HIDE TABLE BORDERS
+    # ============================================================
 
     table_properties = table._tbl.tblPr
 
@@ -635,7 +727,9 @@ def add_equation(
         0,
     )
 
-    left_paragraph = left_cell.paragraphs[0]
+    left_paragraph = (
+        left_cell.paragraphs[0]
+    )
 
     format_paragraph(
         paragraph=left_paragraph,
@@ -653,7 +747,9 @@ def add_equation(
         1,
     )
 
-    equation_paragraph = equation_cell.paragraphs[0]
+    equation_paragraph = (
+        equation_cell.paragraphs[0]
+    )
 
     format_paragraph(
         paragraph=equation_paragraph,
@@ -669,11 +765,10 @@ def add_equation(
         "m:oMath"
     )
 
-    for element in equation_elements:
-
-        math_object.append(
-            element
-        )
+    append_math_content(
+        parent=math_object,
+        content=equation_elements,
+    )
 
     math_paragraph.append(
         math_object
@@ -693,7 +788,9 @@ def add_equation(
         2,
     )
 
-    number_paragraph = number_cell.paragraphs[0]
+    number_paragraph = (
+        number_cell.paragraphs[0]
+    )
 
     format_paragraph(
         paragraph=number_paragraph,
@@ -713,61 +810,6 @@ def add_equation(
 
 
 # ================================================================
-# SIMPLE EQUATION HELPERS
-# ================================================================
-
-def add_simple_equation(
-    document,
-    text,
-    equation_number=None,
-):
-    """
-    Add simple native Word equation.
-    """
-
-    return add_equation(
-        document=document,
-        equation_elements=create_math_text(
-            text
-        ),
-        equation_number=equation_number,
-    )
-
-
-def add_fraction_equation(
-    document,
-    left_text,
-    numerator,
-    denominator,
-    equation_number=None,
-):
-    """
-    Add equation:
-
-        left_text = numerator / denominator
-    """
-
-    equation_elements = [
-        create_math_text(
-            left_text
-        ),
-        create_math_text(
-            "="
-        ),
-        create_fraction(
-            numerator=numerator,
-            denominator=denominator,
-        ),
-    ]
-
-    return add_equation(
-        document=document,
-        equation_elements=equation_elements,
-        equation_number=equation_number,
-    )
-
-
-# ================================================================
 # DOCUMENT STYLES
 # ================================================================
 
@@ -775,7 +817,7 @@ def configure_document_styles(
     document,
 ):
     """
-    Configure default Word document styles.
+    Configure default Word document style.
     """
 
     normal_style = document.styles[
@@ -788,10 +830,8 @@ def configure_document_styles(
         FONT_SIZE_PT
     )
 
-    normal_style_element = normal_style._element
-
     normal_style_properties = (
-        normal_style_element.get_or_add_rPr()
+        normal_style._element.get_or_add_rPr()
     )
 
     normal_style_fonts = (
@@ -831,21 +871,19 @@ def configure_document_styles(
 
 
 # ================================================================
-# DOCUMENT PAGE SETTINGS
+# PAGE SETTINGS
 # ================================================================
 
 def configure_page_settings(
     document,
 ):
     """
-    Configure document page margins.
+    Configure A4 report page margins.
 
-    A4 page:
-
-        left   = 3.0 cm
-        right  = 1.5 cm
-        top    = 2.0 cm
-        bottom = 2.0 cm
+    Left   : 3.0 cm
+    Right  : 1.5 cm
+    Top    : 2.0 cm
+    Bottom : 2.0 cm
     """
 
     section = document.sections[0]
@@ -868,7 +906,7 @@ def configure_page_settings(
 
 
 # ================================================================
-# NUMBER FORMAT
+# NUMBER FORMATTING
 # ================================================================
 
 def format_number(
@@ -876,7 +914,7 @@ def format_number(
     digits=3,
 ):
     """
-    Format a number using decimal comma.
+    Format number using decimal comma.
     """
 
     formatted = f"{value:.{digits}f}"
@@ -934,7 +972,7 @@ def create_section01_word_report(
         Supply frequency, Hz.
 
     output_path : str or Path, optional
-        Custom DOCX path.
+        Custom DOCX output path.
 
     Returns
     -------
@@ -1042,16 +1080,21 @@ def create_section01_word_report(
         ),
     )
 
-    add_simple_equation(
+    add_equation(
         document=document,
-        text=(
-            f"h={format_integer(result['h'])} мм"
-        ),
+        equation_elements=[
+            create_math_text(
+                "h="
+            ),
+            create_math_text(
+                f"{format_integer(result['h'])} мм"
+            ),
+        ],
     )
 
 
     # ============================================================
-    # P02 - OUTER STATOR DIAMETER
+    # P02 - STATOR OUTER DIAMETER
     # ============================================================
 
     add_text_paragraph(
@@ -1068,11 +1111,20 @@ def create_section01_word_report(
         ),
     )
 
-    add_simple_equation(
+    add_equation(
         document=document,
-        text=(
-            f"Dₐ={format_number(result['Da'], 3)} м"
-        ),
+        equation_elements=[
+            create_subscript(
+                "D",
+                "a",
+            ),
+            create_math_text(
+                "="
+            ),
+            create_math_text(
+                f"{format_number(result['Da'], 3)} м"
+            ),
+        ],
     )
 
 
@@ -1094,12 +1146,26 @@ def create_section01_word_report(
         ),
     )
 
-    add_simple_equation(
+    add_equation(
         document=document,
-        text=(
-            f"K_D={format_number(result['Kd'], 2)}"
-        ),
+        equation_elements=[
+            create_subscript(
+                "K",
+                "D",
+            ),
+            create_math_text(
+                "="
+            ),
+            create_math_text(
+                f"{format_number(result['Kd'], 2)}"
+            ),
+        ],
     )
+
+
+    # ============================================================
+    # STATOR INNER DIAMETER
+    # ============================================================
 
     add_text_paragraph(
         document=document,
@@ -1109,24 +1175,56 @@ def create_section01_word_report(
         ),
     )
 
-    add_simple_equation(
+    add_equation(
         document=document,
-        text="D=K_D·Dₐ",
+        equation_elements=[
+            create_math_text(
+                "D="
+            ),
+            create_subscript(
+                "K",
+                "D",
+            ),
+            create_math_text(
+                "·"
+            ),
+            create_subscript(
+                "D",
+                "a",
+            ),
+        ],
         equation_number="1.1",
     )
 
     add_text_paragraph(
         document=document,
-        text="Подставляя численные значения, получаем",
+        text=(
+            "Подставляя численные значения, получаем"
+        ),
     )
 
-    add_simple_equation(
+    add_equation(
         document=document,
-        text=(
-            f"D={format_number(result['Kd'], 2)}·"
-            f"{format_number(result['Da'], 3)}="
-            f"{format_number(result['D'], 3)} м"
-        ),
+        equation_elements=[
+            create_math_text(
+                "D="
+            ),
+            create_math_text(
+                f"{format_number(result['Kd'], 2)}"
+            ),
+            create_math_text(
+                "·"
+            ),
+            create_math_text(
+                f"{format_number(result['Da'], 3)}"
+            ),
+            create_math_text(
+                "="
+            ),
+            create_math_text(
+                f"{format_number(result['D'], 3)} м"
+            ),
+        ],
     )
 
 
@@ -1141,17 +1239,33 @@ def create_section01_word_report(
         ),
     )
 
-    add_fraction_equation(
+    add_equation(
         document=document,
-        left_text="τ",
-        numerator="πD",
-        denominator="2p",
+        equation_elements=[
+            create_math_text(
+                "τ="
+            ),
+            create_fraction(
+                numerator=[
+                    create_math_text(
+                        "πD"
+                    ),
+                ],
+                denominator=[
+                    create_math_text(
+                        "2p"
+                    ),
+                ],
+            ),
+        ],
         equation_number="1.2",
     )
 
     add_text_paragraph(
         document=document,
-        text="Подставляя численные значения, получаем",
+        text=(
+            "Подставляя численные значения, получаем"
+        ),
     )
 
     add_equation(
@@ -1161,15 +1275,25 @@ def create_section01_word_report(
                 "τ="
             ),
             create_fraction(
-                numerator=(
-                    f"π·{format_number(result['D'], 3)}"
-                ),
-                denominator=(
-                    f"{poles}"
-                ),
+                numerator=[
+                    create_math_text(
+                        "π·"
+                    ),
+                    create_math_text(
+                        f"{format_number(result['D'], 3)}"
+                    ),
+                ],
+                denominator=[
+                    create_math_text(
+                        f"{poles}"
+                    ),
+                ],
             ),
             create_math_text(
-                f"={format_number(result['tau'], 3)} м"
+                "="
+            ),
+            create_math_text(
+                f"{format_number(result['tau'], 3)} м"
             ),
         ],
     )
@@ -1189,16 +1313,25 @@ def create_section01_word_report(
         ),
     )
 
-    add_simple_equation(
+    add_equation(
         document=document,
-        text=(
-            f"K_E={format_number(result['Ke'], 3)}"
-        ),
+        equation_elements=[
+            create_subscript(
+                "K",
+                "E",
+            ),
+            create_math_text(
+                "="
+            ),
+            create_math_text(
+                f"{format_number(result['Ke'], 3)}"
+            ),
+        ],
     )
 
 
     # ============================================================
-    # P05 - ETA
+    # P05 - EFFICIENCY
     # ============================================================
 
     add_text_paragraph(
@@ -1211,16 +1344,21 @@ def create_section01_word_report(
         ),
     )
 
-    add_simple_equation(
+    add_equation(
         document=document,
-        text=(
-            f"η={format_number(result['eta'], 3)}"
-        ),
+        equation_elements=[
+            create_math_text(
+                "η="
+            ),
+            create_math_text(
+                f"{format_number(result['eta'], 3)}"
+            ),
+        ],
     )
 
 
     # ============================================================
-    # P06 - COS PHI
+    # P06 - POWER FACTOR
     # ============================================================
 
     add_text_paragraph(
@@ -1231,11 +1369,16 @@ def create_section01_word_report(
         ),
     )
 
-    add_simple_equation(
+    add_equation(
         document=document,
-        text=(
-            f"cosφ={format_number(result['cos_phi'], 3)}"
-        ),
+        equation_elements=[
+            create_math_text(
+                "cosφ="
+            ),
+            create_math_text(
+                f"{format_number(result['cos_phi'], 3)}"
+            ),
+        ],
     )
 
 
@@ -1258,8 +1401,21 @@ def create_section01_word_report(
                 "P′="
             ),
             create_fraction(
-                numerator="P₂K_E",
-                denominator="ηcosφ",
+                numerator=[
+                    create_subscript(
+                        "P",
+                        "2",
+                    ),
+                    create_subscript(
+                        "K",
+                        "E",
+                    ),
+                ],
+                denominator=[
+                    create_math_text(
+                        "η·cosφ"
+                    ),
+                ],
             ),
         ],
         equation_number="1.3",
@@ -1267,7 +1423,9 @@ def create_section01_word_report(
 
     add_text_paragraph(
         document=document,
-        text="Подставляя численные значения, получаем",
+        text=(
+            "Подставляя численные значения, получаем"
+        ),
     )
 
     add_equation(
@@ -1277,24 +1435,41 @@ def create_section01_word_report(
                 "P′="
             ),
             create_fraction(
-                numerator=(
-                    f"{format_number(P2, 2)}·1000·"
-                    f"{format_number(result['Ke'], 3)}"
-                ),
-                denominator=(
-                    f"{format_number(result['eta'], 3)}·"
-                    f"{format_number(result['cos_phi'], 3)}"
-                ),
+                numerator=[
+                    create_math_text(
+                        f"{format_number(P2, 2)}"
+                    ),
+                    create_math_text(
+                        "·1000·"
+                    ),
+                    create_math_text(
+                        f"{format_number(result['Ke'], 3)}"
+                    ),
+                ],
+                denominator=[
+                    create_math_text(
+                        f"{format_number(result['eta'], 3)}"
+                    ),
+                    create_math_text(
+                        "·"
+                    ),
+                    create_math_text(
+                        f"{format_number(result['cos_phi'], 3)}"
+                    ),
+                ],
             ),
             create_math_text(
-                f"={format_integer(result['P_prime'])} ВА"
+                "="
+            ),
+            create_math_text(
+                f"{format_integer(result['P_prime'])} ВА"
             ),
         ],
     )
 
 
     # ============================================================
-    # P07 - B DELTA
+    # P07 - AIR-GAP FLUX DENSITY
     # ============================================================
 
     add_text_paragraph(
@@ -1303,17 +1478,26 @@ def create_section01_word_report(
             "Предварительное значение магнитной индукции "
             "в воздушном зазоре выбираем по рекомендуемому "
             "диапазону. Для рассматриваемого двигателя "
-            f"B_δ = {format_number(result['B_delta_min'], 3)}..."
+            f"Bδ = {format_number(result['B_delta_min'], 3)}..."
             f"{format_number(result['B_delta_max'], 3)} Тл. "
             "Принимаем:"
         ),
     )
 
-    add_simple_equation(
+    add_equation(
         document=document,
-        text=(
-            f"B_δ={format_number(result['B_delta'], 3)} Тл"
-        ),
+        equation_elements=[
+            create_subscript(
+                "B",
+                "δ",
+            ),
+            create_math_text(
+                "="
+            ),
+            create_math_text(
+                f"{format_number(result['B_delta'], 3)} Тл"
+            ),
+        ],
     )
 
 
@@ -1334,11 +1518,16 @@ def create_section01_word_report(
         ),
     )
 
-    add_simple_equation(
+    add_equation(
         document=document,
-        text=(
-            f"A={format_integer(result['A'])} А/м"
-        ),
+        equation_elements=[
+            create_math_text(
+                "A="
+            ),
+            create_math_text(
+                f"{format_integer(result['A'])} А/м"
+            ),
+        ],
     )
 
 
@@ -1358,15 +1547,30 @@ def create_section01_word_report(
     add_equation(
         document=document,
         equation_elements=[
+            create_subscript(
+                "α",
+                "δ",
+            ),
             create_math_text(
-                "α_δ="
+                "="
             ),
             create_fraction(
-                numerator="2",
-                denominator="π",
+                numerator=[
+                    create_math_text(
+                        "2"
+                    ),
+                ],
+                denominator=[
+                    create_math_text(
+                        "π"
+                    ),
+                ],
             ),
             create_math_text(
-                f"={format_number(result['alpha_delta'], 3)}"
+                "≈"
+            ),
+            create_math_text(
+                f"{format_number(result['alpha_delta'], 3)}"
             ),
         ],
     )
@@ -1387,15 +1591,35 @@ def create_section01_word_report(
     add_equation(
         document=document,
         equation_elements=[
+            create_subscript(
+                "k",
+                "B",
+            ),
             create_math_text(
-                "k_B="
+                "="
             ),
             create_fraction(
-                numerator="π",
-                denominator="2√2",
+                numerator=[
+                    create_math_text(
+                        "π"
+                    ),
+                ],
+                denominator=[
+                    create_math_text(
+                        "2"
+                    ),
+                    create_radical(
+                        create_math_text(
+                            "2"
+                        )
+                    ),
+                ],
             ),
             create_math_text(
-                f"={format_number(result['k_B'], 3)}"
+                "="
+            ),
+            create_math_text(
+                f"{format_number(result['k_B'], 3)}"
             ),
         ],
     )
@@ -1413,11 +1637,20 @@ def create_section01_word_report(
         ),
     )
 
-    add_simple_equation(
+    add_equation(
         document=document,
-        text=(
-            f"k_об1={format_number(result['kw1'], 3)}"
-        ),
+        equation_elements=[
+            create_subscript(
+                "k",
+                "об1",
+            ),
+            create_math_text(
+                "="
+            ),
+            create_math_text(
+                f"{format_number(result['kw1'], 3)}"
+            ),
+        ],
     )
 
 
@@ -1433,16 +1666,25 @@ def create_section01_word_report(
         ),
     )
 
-    add_simple_equation(
+    add_equation(
         document=document,
-        text=(
-            f"n₁={format_integer(result['n1_rpm'])} об/мин"
-        ),
+        equation_elements=[
+            create_subscript(
+                "n",
+                "1",
+            ),
+            create_math_text(
+                "="
+            ),
+            create_math_text(
+                f"{format_integer(result['n1_rpm'])} об/мин"
+            ),
+        ],
     )
 
 
     # ============================================================
-    # OMEGA
+    # SYNCHRONOUS ANGULAR FREQUENCY
     # ============================================================
 
     add_text_paragraph(
@@ -1453,19 +1695,42 @@ def create_section01_word_report(
         ),
     )
 
-    add_fraction_equation(
+    add_equation(
         document=document,
-        left_text="Ω",
-        numerator="2πf₁",
-        denominator="p",
+        equation_elements=[
+            create_math_text(
+                "Ω="
+            ),
+            create_fraction(
+                numerator=[
+                    create_math_text(
+                        "2π"
+                    ),
+                    create_subscript(
+                        "f",
+                        "1",
+                    ),
+                ],
+                denominator=[
+                    create_math_text(
+                        "p"
+                    ),
+                ],
+            ),
+        ],
         equation_number="1.4",
     )
 
-    pole_pairs = poles / 2
+    pole_pairs = (
+        poles
+        / 2
+    )
 
     add_text_paragraph(
         document=document,
-        text="Подставляя численные значения, получаем",
+        text=(
+            "Подставляя численные значения, получаем"
+        ),
     )
 
     add_equation(
@@ -1475,22 +1740,32 @@ def create_section01_word_report(
                 "Ω="
             ),
             create_fraction(
-                numerator=(
-                    f"2π·{format_number(f1, 1)}"
-                ),
-                denominator=(
-                    f"{format_number(pole_pairs, 0)}"
-                ),
+                numerator=[
+                    create_math_text(
+                        "2π·"
+                    ),
+                    create_math_text(
+                        f"{format_number(f1, 1)}"
+                    ),
+                ],
+                denominator=[
+                    create_math_text(
+                        f"{format_number(pole_pairs, 0)}"
+                    ),
+                ],
             ),
             create_math_text(
-                f"={format_number(result['Omega'], 3)} рад/с"
+                "="
+            ),
+            create_math_text(
+                f"{format_number(result['Omega'], 3)} рад/с"
             ),
         ],
     )
 
 
     # ============================================================
-    # CORE LENGTH
+    # CALCULATED CORE LENGTH
     # KOPYLOV FORMULA 9.6
     # ============================================================
 
@@ -1505,14 +1780,43 @@ def create_section01_word_report(
     add_equation(
         document=document,
         equation_elements=[
+            create_subscript(
+                "l",
+                "δ",
+            ),
             create_math_text(
-                "l_δ="
+                "="
             ),
             create_fraction(
-                numerator="P′",
-                denominator=(
-                    "D²Ωk_Bk_об1AB_δ"
-                ),
+                numerator=[
+                    create_math_text(
+                        "P′"
+                    ),
+                ],
+                denominator=[
+                    create_superscript(
+                        "D",
+                        "2",
+                    ),
+                    create_math_text(
+                        "Ω"
+                    ),
+                    create_subscript(
+                        "k",
+                        "B",
+                    ),
+                    create_subscript(
+                        "k",
+                        "об1",
+                    ),
+                    create_math_text(
+                        "A"
+                    ),
+                    create_subscript(
+                        "B",
+                        "δ",
+                    ),
+                ],
             ),
         ],
         equation_number="1.5",
@@ -1529,24 +1833,61 @@ def create_section01_word_report(
     add_equation(
         document=document,
         equation_elements=[
+            create_subscript(
+                "l",
+                "δ",
+            ),
             create_math_text(
-                "l_δ="
+                "="
             ),
             create_fraction(
-                numerator=(
-                    f"{format_integer(result['P_prime'])}"
-                ),
-                denominator=(
-                    f"{format_number(result['D'], 4)}²·"
-                    f"{format_number(result['Omega'], 3)}·"
-                    f"{format_number(result['k_B'], 4)}·"
-                    f"{format_number(result['kw1'], 3)}·"
-                    f"{format_integer(result['A'])}·"
-                    f"{format_number(result['B_delta'], 3)}"
-                ),
+                numerator=[
+                    create_math_text(
+                        f"{format_integer(result['P_prime'])}"
+                    ),
+                ],
+                denominator=[
+    create_superscript(
+        f"{format_number(result['D'], 4)}",
+        "2",
+    ),
+    create_math_text(
+        "·"
+    ),
+    create_math_text(
+        f"{format_number(result['Omega'], 3)}"
+    ),
+    create_math_text(
+        "·"
+    ),
+    create_math_text(
+        f"{format_number(result['k_B'], 4)}"
+    ),
+    create_math_text(
+        "·"
+    ),
+    create_math_text(
+        f"{format_number(result['kw1'], 3)}"
+    ),
+    create_math_text(
+        "·"
+    ),
+    create_math_text(
+        f"{format_integer(result['A'])}"
+    ),
+    create_math_text(
+        "·"
+    ),
+    create_math_text(
+        f"{format_number(result['B_delta'], 3)}"
+    ),
+],
             ),
             create_math_text(
-                f"={format_number(result['l_delta'], 4)} м"
+                "="
+            ),
+            create_math_text(
+                f"{format_number(result['l_delta'], 4)} м"
             ),
         ],
     )
@@ -1565,17 +1906,34 @@ def create_section01_word_report(
         ),
     )
 
-    add_fraction_equation(
+    add_equation(
         document=document,
-        left_text="λ",
-        numerator="l_δ",
-        denominator="τ",
+        equation_elements=[
+            create_math_text(
+                "λ="
+            ),
+            create_fraction(
+                numerator=[
+                    create_subscript(
+                        "l",
+                        "δ",
+                    ),
+                ],
+                denominator=[
+                    create_math_text(
+                        "τ"
+                    ),
+                ],
+            ),
+        ],
         equation_number="1.6",
     )
 
     add_text_paragraph(
         document=document,
-        text="Для проектируемого двигателя получаем",
+        text=(
+            "Для проектируемого двигателя получаем"
+        ),
     )
 
     add_equation(
@@ -1585,15 +1943,22 @@ def create_section01_word_report(
                 "λ="
             ),
             create_fraction(
-                numerator=(
-                    f"{format_number(result['l_delta'], 4)}"
-                ),
-                denominator=(
-                    f"{format_number(result['tau'], 4)}"
-                ),
+                numerator=[
+                    create_math_text(
+                        f"{format_number(result['l_delta'], 4)}"
+                    ),
+                ],
+                denominator=[
+                    create_math_text(
+                        f"{format_number(result['tau'], 4)}"
+                    ),
+                ],
             ),
             create_math_text(
-                f"={format_number(result['lambda'], 3)}"
+                "="
+            ),
+            create_math_text(
+                f"{format_number(result['lambda'], 3)}"
             ),
         ],
     )
@@ -1607,8 +1972,8 @@ def create_section01_word_report(
         document=document,
         text=(
             "Согласно рекомендациям методики проектирования "
-            f"допустимый диапазон отношения λ для выбранного "
-            f"исполнения двигателя составляет "
+            "допустимый диапазон отношения λ для выбранного "
+            "исполнения двигателя составляет "
             f"{format_number(result['lambda_min'], 3)}..."
             f"{format_number(result['lambda_max'], 3)}."
         ),
@@ -1661,6 +2026,10 @@ if __name__ == "__main__":
 
     print(
         "DEE Section 01 Word Report Generator"
+    )
+
+    print(
+        "Native OMML subscripts and superscripts enabled."
     )
 
     print(
